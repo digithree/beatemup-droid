@@ -23,14 +23,17 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
     }
     public static final class drawable {
         public static final int ic_launcher=0x7f020000;
+        public static final int particle=0x7f020001;
+        public static final int tiledarkblue=0x7f020002;
+        public static final int tilegreen=0x7f020003;
+        public static final int tilepurple=0x7f020004;
+        public static final int tilered=0x7f020005;
+        public static final int tilewhite=0x7f020006;
+        public static final int tileyellow=0x7f020007;
     }
-    public static final class id {
-        public static final int dummy_button=0x7f070002;
-        public static final int fullscreen_content=0x7f070000;
-        public static final int fullscreen_content_controls=0x7f070001;
-    }
-    public static final class layout {
-        public static final int activity_main=0x7f030000;
+    public static final class raw {
+        public static final int clap1=0x7f030000;
+        public static final int snare1=0x7f030001;
     }
     public static final class string {
         public static final int app_name=0x7f050000;
@@ -81,8 +84,8 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
            <colgroup align="left" />
            <colgroup align="left" />
            <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #ButtonBarContainerTheme_metaButtonBarButtonStyle com.begrud.beatemup.app:metaButtonBarButtonStyle}</code></td><td></td></tr>
-           <tr><td><code>{@link #ButtonBarContainerTheme_metaButtonBarStyle com.begrud.beatemup.app:metaButtonBarStyle}</code></td><td></td></tr>
+           <tr><td><code>{@link #ButtonBarContainerTheme_metaButtonBarButtonStyle com.begrud.beatemup:metaButtonBarButtonStyle}</code></td><td></td></tr>
+           <tr><td><code>{@link #ButtonBarContainerTheme_metaButtonBarStyle com.begrud.beatemup:metaButtonBarStyle}</code></td><td></td></tr>
            </table>
            @see #ButtonBarContainerTheme_metaButtonBarButtonStyle
            @see #ButtonBarContainerTheme_metaButtonBarStyle
@@ -91,23 +94,23 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
             0x7f010000, 0x7f010001
         };
         /**
-          <p>This symbol is the offset where the {@link com.begrud.beatemup.app.R.attr#metaButtonBarButtonStyle}
+          <p>This symbol is the offset where the {@link com.begrud.beatemup.R.attr#metaButtonBarButtonStyle}
           attribute's value can be found in the {@link #ButtonBarContainerTheme} array.
 
 
           <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
 or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-          @attr name com.begrud.beatemup.app:metaButtonBarButtonStyle
+          @attr name com.begrud.beatemup:metaButtonBarButtonStyle
         */
         public static final int ButtonBarContainerTheme_metaButtonBarButtonStyle = 1;
         /**
-          <p>This symbol is the offset where the {@link com.begrud.beatemup.app.R.attr#metaButtonBarStyle}
+          <p>This symbol is the offset where the {@link com.begrud.beatemup.R.attr#metaButtonBarStyle}
           attribute's value can be found in the {@link #ButtonBarContainerTheme} array.
 
 
           <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
 or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-          @attr name com.begrud.beatemup.app:metaButtonBarStyle
+          @attr name com.begrud.beatemup:metaButtonBarStyle
         */
         public static final int ButtonBarContainerTheme_metaButtonBarStyle = 0;
     };
