@@ -8,12 +8,17 @@ import com.begrud.beatemup.animation.TimeDecayObject;
 import com.begrud.beatemup.levels.Level1_1;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.Log;
 
 
 public class GameLogicThread extends Thread {
+	
+	public static final int COORDS_GRID = 0;
+	public static final int COORDS_LEFT_BAR = 1;
+	public static final int COORDS_RIGHT_BAR = 2;
 	
 	private final Context context;
 	private final GameState gameState;
@@ -43,9 +48,12 @@ public class GameLogicThread extends Thread {
 	
 	// ------ LOGIC
 	
+	// bounds
+	// --grid
 	private final float triggerArea = 0.01f;
 	private RectF []gridActiveAreaBounds;
-	
+	// --left nav
+	private RectF []leftNavButtonsBounds;
 	
 	private Object syncLock = new Object();
 	
@@ -53,9 +61,13 @@ public class GameLogicThread extends Thread {
 	
 	private List<TimeDecayObject> animationEventsList = new ArrayList<TimeDecayObject>();
 	
+	private float insideGridPortalWarpPadding = 0.1f;
+	
 	
 	private void init() {
 		soundPlayer = new SoundPlayer(context, gameState);
+		// create bounds
+		// grid
 		gridActiveAreaBounds = new RectF[GameState.GRID_SIZE_ONE_D];
 		int idx = 0;
 		for( int j = 0 ; j < 5 ; j++ ) {
@@ -68,96 +80,92 @@ public class GameLogicThread extends Thread {
 						);
 			}
 		}
+		// left nav buttons
+		leftNavButtonsBounds = new RectF[GfxElementInfo.leftNavButtonNum];
+		float buttonHalfSize = GfxElementInfo.leftNavButtonSizeTouch/2.f;
+		for( int i = 0 ; i < GfxElementInfo.leftNavButtonNum ; i++ ) {
+			leftNavButtonsBounds[i] = new RectF(
+					GfxElementInfo.leftNavButtonPositions[i].x - buttonHalfSize,
+					GfxElementInfo.leftNavButtonPositions[i].y - buttonHalfSize,
+					GfxElementInfo.leftNavButtonPositions[i].x + buttonHalfSize,
+					GfxElementInfo.leftNavButtonPositions[i].y + buttonHalfSize
+					);
+		}
 		// Load first level
 		gameState.loadLevel(new Level1_1());
 	}
 	
 	// coordinate is normalised and adjusted for window, not screen size
-	public void touch(PointF pos) {
+	public void touch(PointF pos, int state) {
 		synchronized(syncLock) {
 			Log.d("GameLogicThread", "touch: "+pos.x+", "+pos.y);
-			// test touch test touch test
-			int x = (int)(pos.x * 5);
-			int y = (int)(pos.y * 5);
-			if( gameState.getGridSound(x, y) == GameState.GRID_SOUND_NONE) {
-				gameState.setGridSound(x, y, GameState.GRID_SOUND_1);
-			} else {
-				gameState.setGridSound(x, y, GameState.GRID_SOUND_NONE);
-			}
-			/*
-			if( gameState.getScreenState() == GameState.SCREEN_HOMEMENU ) {
-				if( gameState.getElementState(GameState.EL_PARENTSNOTE) == 1 ) { // parent note is visible
-					// cancel the parents note
-					gameState.setElementState(GameState.EL_PARENTSNOTE, 0);
-				} else { // parent note is invisible
-					if( gameItemBoundsExtra[GfxElementInfo.EX_PARENTNOTE_ICON].contains(pos.x, pos.y) ) {
-						// state must be 0 (invisible) to get here, set to visible
-						gameState.setElementState(GameState.EL_PARENTSNOTE, 1);
-					} else if( gameItemBounds[GameState.EL_GAME1LOGO].contains(pos.x, pos.y) ) {
-						gameState.setCurrentGame(GameState.GAME_1);
-						gameState.setCurrentState(GameState.STATE_NEW_ROUND);
-						gameState.setScreenState(GameState.SCREEN_GAME);
-						waitTime = GameState.WAIT_TIME[gameState.getCurrentState()];
-						// clear graphics for game
-						for( int i = 3 ; i < 9 ; i++ ) {
-							gameState.setElementState(i, 0);
-						}
-						gameState.setElementState(GameState.EL_STARS,gameState.getGameProgress(
-								gameState.getCurrentGame()));
-					} else if( gameItemBounds[GameState.EL_GAME2LOGO].contains(pos.x, pos.y) ) {
-						gameState.setCurrentGame(GameState.GAME_2);
-						gameState.setCurrentState(GameState.STATE_NEW_ROUND);
-						gameState.setScreenState(GameState.SCREEN_GAME);
-						waitTime = GameState.WAIT_TIME[gameState.getCurrentState()];
-						// clear graphics for game
-						for( int i = 3 ; i < 9 ; i++ ) {
-							gameState.setElementState(i, 0);
-						}
-						gameState.setElementState(GameState.EL_STARS,gameState.getGameProgress(
-								gameState.getCurrentGame()));
-					}
+			if( state == COORDS_GRID ) {
+				// grid
+				int x = (int)(pos.x * 5);
+				int y = (int)(pos.y * 5);
+				Log.d("GameLogicThread", "touch grix: "+x+", "+y);
+				/*
+				if( gameState.getGridSound(x, y) == GameState.GRID_SOUND_NONE) {
+					gameState.setGridSound(x, y, GameState.GRID_SOUND_1);
+				} else {
+					gameState.setGridSound(x, y, GameState.GRID_SOUND_NONE);
 				}
-			} else if( gameState.getScreenState() == GameState.SCREEN_GAME ) {
-				// check for standard elements
-				if( gameItemBoundsExtra[GfxElementInfo.EX_HOME].contains(pos.x, pos.y) ) {
-					gameState.setScreenState(GameState.SCREEN_HOMEMENU);
-					gameState.setCurrentState(GameState.STATE_HOME);
-				}
-				// TODO : implement pause
-				if( gameState.getCurrentState() == GameState.STATE_WAIT_FOR_INPUT ) {
-					// check for replay (replays audio for correct item)
-					if( gameItemBoundsExtra[GfxElementInfo.EX_REPLAY].contains(pos.x, pos.y) ) {
-						soundPlayer.play(gameItems[correctItem]);
+				*/
+				// condition on portal state
+				if( gameState.getPortalState() == GameState.PORTAL_STATE_IN ) {
+					Log.d("GameLogicThread", "portal in SET...");
+					gameState.setPortalInGrid(new Point(x,y));
+					gameState.setPortalState(GameState.PORTAL_STATE_OUT_NORMAL); // TODO : set this to last portal out state
+					Log.d("GameLogicThread", "portal out normal START");
+				} else if( gameState.getPortalState() == GameState.PORTAL_STATE_OUT_NORMAL ) {
+					Log.d("GameLogicThread", "portal out normal SET...");
+					Point portalIn = gameState.getPortalInGrid();
+					if( portalIn.x != x && portalIn.y != y ) {
+						gameState.setPortalOutGrid(new Point(x,y));
+						// TODO : make portal!
+						if( gameState.createPortal() ) {
+							Log.d("GameLogicThread", "portal out normal SET!");
+							gameState.setPortalState(GameState.PORTAL_STATE_NONE);
+						}
+					} else {
+						// failed, leave portal building states
+						gameState.setPortalState(GameState.PORTAL_STATE_NONE);
+						gameState.setPortalInGrid(null);
+						Log.d("GameLogicThread", "portal out normal QUIT");
 					}
-					// check for collision with items
-					for( int i = 0 ; i < 3 ; i++ ) {
-						if( gameItemBounds[GameState.EL_ITEM1+i].contains(pos.x, pos.y) ) {
-							touchedItem = i;
-							Log.d("GameLogicThread", "touched sprite: "+touchedItem);
-							break;
+				} // TODO : add for other portal out states
+			} else if( state == COORDS_LEFT_BAR ) {
+				// left bar				
+				if( leftNavButtonsBounds[GameState.BUTTON_PLAY_STOP].contains(pos.x, pos.y) ) {
+					Log.d("touch","left nav: Play / stop");
+					if( gameState.getState() == GameState.STATE_STOPPED ) {
+						gameState.setState(GameState.STATE_PLAYING);
+						// start particle
+						gameState.setParticleState(0, GameState.PARTICLE_STATE_ON);
+						gameState.setParticleVec(0, new PointF(1.f, 0.f));
+					} else if( gameState.getState() == GameState.STATE_PLAYING ) {
+						gameState.setState(GameState.STATE_STOPPED);
+						// stop particle
+						gameState.setParticleState(0, GameState.PARTICLE_STATE_OFF);
+						gameState.setParticlePos(0,
+								new PointF(GameState.PARTICLE_POSITION_DEFAULT.x,
+										GameState.PARTICLE_POSITION_DEFAULT.y));
+					}
+				} else if( leftNavButtonsBounds[GameState.BUTTON_PORTAL].contains(pos.x, pos.y) ) {
+					Log.d("touch","left nav: portal in?");
+					if( gameState.getState() != GameState.STATE_REVIEW ) {
+						if( gameState.getPortalState() == GameState.PORTAL_STATE_NONE ) {
+							gameState.setPortalState(GameState.PORTAL_STATE_IN);
+							Log.d("touch","left nav: portal in START");
 						}
 					}
-					if( touchedItem != -1 ) {
-						Log.d("GameLogicThread","got touchedSprite: "+touchedItem);
-						if( touchedItem == correctItem ) {
-							gameState.setCurrentState(GameState.STATE_INPUT_CORRECT);
-							gameState.setElementState(GameState.EL_ITEM1+touchedItem, 3);	// item red
-							game'State.setElementState(GameState.EL_SMUGGLES, 2);	// smuggles red
-							soundPlayer.play(SoundPlayer.SOUND_CORRECT);
-						} else {
-							gameState.setCurrentState(GameState.STATE_INPUT_INCORRECT);
-							gameState.setElementState(GameState.EL_ITEM1+touchedItem, 2);	// item green
-							gameState.setElementState(GameState.EL_SMUGGLES, 1);	// smuggles green
-							soundPlayer.play(SoundPlayer.SOUND_INCORRECT);
-						}
-						waitTime = GameState.WAIT_TIME[gameState.getCurrentState()];
-						Log.d("GameLogicThread", "gameState = "+gameState.getCurrentState());
-						Log.d("GameLogicThread", "wait time for this state: "+GameState.WAIT_TIME[gameState.getCurrentState()]);
-						Log.d("GameLogicThread", "(In)Correct: set wait time to "+waitTime);
+				} else if( leftNavButtonsBounds[GameState.BUTTON_NORMAL].contains(pos.x, pos.y) ) {
+					Log.d("touch","left nav: portal out normal");
+					if( gameState.getState() != GameState.STATE_REVIEW ) {
+						// not important now
 					}
 				}
 			}
-			*/
 		}
 	}
 	
@@ -179,15 +187,59 @@ public class GameLogicThread extends Thread {
 					float mag = GameState.PARTICLE_SPEED_NORMAL;
 					pos.x += vec.x * mag * time;
 					pos.y += vec.y * mag * time;
-					if( pos.x >= 1.f ) {
-						pos.x -= 1.f;
-					} else if( pos.x < 0.f ) {
-						pos.x += 1.f;
+					// check for portal warp
+					boolean warped = false;
+					Point gridPos = new Point(
+							(int)(pos.x * 5),
+							(int)(pos.y * 5)
+							);
+					for( int j = 0 ; j < GameState.MAX_PORTALS ; j++ ) {
+						Point portalIn = gameState.getPortalIn(j);
+						Point portalOut = gameState.getPortalOut(j);
+						if( portalIn != null && portalOut != null ) {
+							if( portalIn.x == gridPos.x && portalIn.y == gridPos.y ) {
+								PointF insidePos = new PointF(
+										(pos.x - (0.2f * (float)gridPos.x)) * 5.f,
+										(pos.y - (0.2f * (float)gridPos.y)) * 5.f
+										);
+								if( insidePos.x < insideGridPortalWarpPadding
+										&& vec.x < 0.f ) {
+									// going left
+									pos.x -= (float)(portalIn.x-(portalOut.x+1))*0.2f;
+									pos.y -= (float)(portalIn.y-portalOut.y)*0.2f;
+								} else if( insidePos.x >= (1.f-insideGridPortalWarpPadding)
+										&& vec.x > 0.f ) {
+									// going right
+									pos.x -= (float)(portalIn.x-(portalOut.x-1))*0.2f;
+									pos.y -= (float)(portalIn.y-portalOut.y)*0.2f;
+								} else if( insidePos.y < insideGridPortalWarpPadding
+										&& vec.y < 0.f ) {
+									// going up
+									pos.x -= (float)(portalIn.x-portalOut.x)*0.2f;
+									pos.y -= (float)(portalIn.y-(portalOut.y+1))*0.2f;
+								} else if( insidePos.y >= (1.f-insideGridPortalWarpPadding)
+										&& vec.y > 0.f ) {
+									// going down
+									pos.x -= (float)(portalIn.x-portalOut.x)*0.2f;
+									pos.y -= (float)(portalIn.y-(portalOut.y-1))*0.2f;
+								}
+								//pos.x -= (float)(portalIn.x-portalOut.x)*0.2f;
+								//pos.y -= (float)(portalIn.y-portalOut.y)*0.2f;
+							}
+						}
 					}
-					if( pos.y >= 1.f ) {
-						pos.y -= 1.f;
-					} else if( pos.y < 0.f ) {
-						pos.y += 1.f;
+					// wrap bounds (only if not warped by portal)
+					if( !warped ) {
+						if( pos.x >= 1.f ) {
+							pos.x -= 1.f;
+						} else if( pos.x < 0.f ) {
+							pos.x += 1.f;
+						}
+						if( pos.y >= 1.f ) {
+							pos.y -= 1.f;
+						} else if( pos.y < 0.f ) {
+							pos.y += 1.f;
+						}
 					}
 					// trigger condition
 					for( int j = 0 ; j < GameState.GRID_SIZE_ONE_D ; j++ ) {
@@ -197,89 +249,12 @@ public class GameLogicThread extends Thread {
 							gameState.setGridState(gridX, gridY, GameState.GRID_STATE_ACTIVE);
 							animationEventsList.add(new GridFlashAnimation(gameState, gridX, gridY));
 							soundPlayer.play(gameState.getGridSound(gridX, gridY));
+							// TODO : reactivate sound!
 							//Log.d("GameLogicThread","grid ("+gridX+", "+gridY+") active");
 						}
 					}
 				}
 			}
-			/*
-			//Log.d("animate", "time elapsed: "+time);
-			if( gameState.getScreenState() == GameState.SCREEN_HOMEMENU ) {
-				// ?
-			} else if( gameState.getScreenState() == GameState.SCREEN_GAME ) {
-				if( gameState.getCurrentState() != GameState.STATE_WAIT_FOR_INPUT ) {
-					waitTime -= time;
-					if( waitTime <= 0.f ) { // timer has elapsed
-						// moving FROM these current state
-						if( gameState.getCurrentState() == GameState.STATE_NEW_ROUND ) {
-							// randomly pick a set of 3 elements from the available items
-							gameItems[0] = (int)(Math.random() * 10);
-							int choice = (int)(Math.random() * 10);
-							while( choice == gameItems[0] ) {
-								choice = (int)(Math.random() * 10);
-							}
-							gameItems[1] = choice;
-							choice = (int)(Math.random() * 9);
-							while( choice == gameItems[0] || choice == gameItems[1] ) {
-								choice = (int)(Math.random() * 10);
-							}
-							gameItems[2] = choice;
-							gameState.setCurrentRoundItems(gameItems);
-							// randomly select the correct item (subscript)
-							correctItem = (int)(Math.random() * 3);
-							gameState.setCurrentState(GameState.STATE_REVEAL_ITEM_1);
-							// do next item reveal
-							gameState.setElementState(GameState.EL_ITEM1, 1);
-							soundPlayer.play(gameItems[0]);
-						} else if( gameState.getCurrentState() == GameState.STATE_REVEAL_ITEM_1 ) {
-							gameState.setCurrentState(GameState.STATE_REVEAL_ITEM_2);
-							// do next item reveal
-							gameState.setElementState(GameState.EL_ITEM2, 1);
-							soundPlayer.play(gameItems[1]);
-						} else if( gameState.getCurrentState() == GameState.STATE_REVEAL_ITEM_2 ) {
-							gameState.setCurrentState(GameState.STATE_REVEAL_ITEM_3);
-							// do next item reveal
-							gameState.setElementState(GameState.EL_ITEM3, 1);
-							soundPlayer.play(gameItems[2]);
-						} else if( gameState.getCurrentState() == GameState.STATE_REVEAL_ITEM_3 ) {
-							gameState.setCurrentState(GameState.STATE_CORRECT_QUE);
-							soundPlayer.play(gameItems[correctItem]);
-						} else if( gameState.getCurrentState() == GameState.STATE_CORRECT_QUE ) {
-							gameState.setCurrentState(GameState.STATE_WAIT_FOR_INPUT);
-						} else if( gameState.getCurrentState() == GameState.STATE_INPUT_INCORRECT ) {
-							gameState.setCurrentState(GameState.STATE_WAIT_FOR_INPUT);
-							gameState.setElementState(GameState.EL_ITEM1+touchedItem, 1);
-							gameState.setElementState(GameState.EL_SMUGGLES, 0);	// smuggles red
-							touchedItem = -1;
-						} else if( gameState.getCurrentState() == GameState.STATE_INPUT_CORRECT ) {					
-							// reset elements
-							gameState.setElementState(GameState.EL_SMUGGLES, 0);
-							gameState.setElementState(GameState.EL_ITEM1, 0);
-							gameState.setElementState(GameState.EL_ITEM2, 0);
-							gameState.setElementState(GameState.EL_ITEM3, 0);
-							// add star
-							if( gameState.addStarToCurrentGame() ) {
-								// finished!
-								gameState.setCurrentState(GameState.STATE_WON);
-								soundPlayer.play(SoundPlayer.SOUND_ALL_STARS);
-								gameState.setElementState(GameState.EL_SUCCESS,1);
-							} else {
-								// continue
-								gameState.setCurrentState(GameState.STATE_NEW_ROUND);
-							}
-							touchedItem = -1;
-						} else if( gameState.getCurrentState() == GameState.STATE_WON ) {
-							gameState.setElementState(GameState.EL_SUCCESS,0);
-							gameState.setScreenState(GameState.SCREEN_HOMEMENU);
-							gameState.setCurrentState(GameState.STATE_HOME);
-							gameState.setElementState(GameState.EL_GAME1LOGO+gameState.getCurrentGame(),1);
-							// TODO : set some other flag that the game is complete, not just it's visual rep.
-						}
-						waitTime = GameState.WAIT_TIME[gameState.getCurrentState()];
-					}
-				}
-			}
-			*/
 		}
 	}
 }

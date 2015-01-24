@@ -6,7 +6,9 @@ import javax.microedition.khronos.opengles.GL10;
 import com.begrud.beatemup.R;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.graphics.PointF;
+import android.graphics.RectF;
 import android.opengl.GLSurfaceView.Renderer;
 
 
@@ -20,7 +22,13 @@ public class GLRenderer implements Renderer
 	
 	private final GameState gameState;
 	
+	// textures
 	private Tex []textures;
+	
+	private Tex []buttons;
+	private PointF []buttonPos;
+	
+	private Tex []portals;
 	
 	private boolean firsttime = true;
 	private float hor = 1.0f;
@@ -60,17 +68,75 @@ public class GLRenderer implements Renderer
 												// is the same as moving the camera 5 units away
 		
 		/* DRAWSCREEN BASED ON GAMESTATE */
+		
+		// draw left nav buttons
+		float xLeftNavScale = (hor/2.f) - (ver/2.f);
+		for( int i = 0 ; i < GfxElementInfo.leftNavButtonNum ; i++ ) {
+			int idx = i;
+			if( i == GameState.BUTTON_PLAY_STOP ) {
+				idx = gameState.getState() == GameState.STATE_PLAYING ? 8 : 1;
+			}
+			buttons[idx].draw(
+					(xLeftNavScale*GfxElementInfo.leftNavButtonPositions[i].x),
+					ver - ((ver*GfxElementInfo.leftNavButtonPositions[i].y)),  //"ver -" flips y axis
+					//(ver*0.2f)+
+					GfxElementInfo.leftNavButtonSize*ver,
+					GfxElementInfo.leftNavButtonSize*ver);
+		}
 
 		/* draw grid */
-		float sizeFactor = 0.2f;
 		float xOffset = (hor/2.f)-(ver/2.f);
+		float sizeFactor = 0.2f;
 		for( int j = 0 ; j < 5 ; j++ ) {
 			for( int i = 0 ; i < 5 ; i++ ) {
 				int gridTex = gameState.getGridTex(i, j);
-				// TODO : convert gridstate into texture number
 				textures[gridTex].draw(
 						xOffset + (ver*(sizeFactor*((float)i+0.5f))),
 						ver - ((ver*(sizeFactor*((float)j+0.5f)))),  //"ver -" flips y axis
+						//(ver*0.2f)+
+						sizeFactor*ver,
+						sizeFactor*ver);
+			}
+		}
+		
+		// draw portals
+		// -- temp portals
+		// portal in
+		if( gameState.getPortalInGrid() != null ) {
+			Point portalIn = gameState.getPortalInGrid();
+			portals[0].draw(
+					xOffset + (ver*(sizeFactor*((float)portalIn.x+0.5f))),
+					ver - ((ver*(sizeFactor*((float)portalIn.y+0.5f)))),  //"ver -" flips y axis
+					//(ver*0.2f)+
+					sizeFactor*ver,
+					sizeFactor*ver);
+		}
+		// portal out
+		if( gameState.getPortalOutGrid() != null ) {
+			Point portalOut = gameState.getPortalOutGrid();
+			portals[1].draw(
+					xOffset + (ver*(sizeFactor*((float)portalOut.x+0.5f))),
+					ver - ((ver*(sizeFactor*((float)portalOut.y+0.5f)))),  //"ver -" flips y axis
+					//(ver*0.2f)+
+					sizeFactor*ver,
+					sizeFactor*ver);
+		}
+		// -- created portals
+		for( int i = 0 ; i < GameState.MAX_PORTALS ; i++ ) {
+			Point portalIn = gameState.getPortalIn(i);
+			Point portalOut = gameState.getPortalOut(i);
+			if( portalIn != null && portalOut != null ) {
+				// portal in
+				portals[0].draw(
+						xOffset + (ver*(sizeFactor*((float)portalIn.x+0.5f))),
+						ver - ((ver*(sizeFactor*((float)portalIn.y+0.5f)))),  //"ver -" flips y axis
+						//(ver*0.2f)+
+						sizeFactor*ver,
+						sizeFactor*ver);
+				// portal out
+				portals[1].draw(
+						xOffset + (ver*(sizeFactor*((float)portalOut.x+0.5f))),
+						ver - ((ver*(sizeFactor*((float)portalOut.y+0.5f)))),  //"ver -" flips y axis
 						//(ver*0.2f)+
 						sizeFactor*ver,
 						sizeFactor*ver);
@@ -146,6 +212,8 @@ public class GLRenderer implements Renderer
 		this.gl = gl;
 	
 		textures = new Tex[7];	//annoyingly just 1 too many...
+		buttons = new Tex[9];
+		portals = new Tex[2];
 		
 		// fullscreen images -- .25seconds loading total //
 		textures[0] = new Tex(gl, this.context, R.drawable.tilegreen);
@@ -155,5 +223,20 @@ public class GLRenderer implements Renderer
 		textures[4] = new Tex(gl, this.context, R.drawable.tilepurple);
 		textures[5] = new Tex(gl, this.context, R.drawable.tilewhite);
 		textures[6] = new Tex(gl, this.context, R.drawable.tiledarkblue);
+		
+		// buttons
+		buttons[0] = new Tex(gl, this.context, R.drawable.buttonspeaker);
+		buttons[1] = new Tex(gl, this.context, R.drawable.buttonplay);
+		buttons[2] = new Tex(gl, this.context, R.drawable.buttonportal);
+		buttons[3] = new Tex(gl, this.context, R.drawable.buttonup);
+		buttons[4] = new Tex(gl, this.context, R.drawable.buttonnormal);
+		buttons[5] = new Tex(gl, this.context, R.drawable.buttondown);
+		buttons[6] = new Tex(gl, this.context, R.drawable.buttondeleteall);
+		buttons[7] = new Tex(gl, this.context, R.drawable.buttondelete);
+		buttons[8] = new Tex(gl, this.context, R.drawable.buttonstop);
+		
+		// portals
+		portals[0] = new Tex(gl, this.context, R.drawable.ringblue);
+		portals[1] = new Tex(gl, this.context, R.drawable.ringred);
 	}
 }

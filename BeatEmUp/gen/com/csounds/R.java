@@ -8,6 +8,6 @@ package com.csounds;
 
 public final class R {
 	public static final class drawable {
-		public static final int ic_launcher = 0x7f020000;
+		public static final int ic_launcher = 0x7f020009;
 	}
 }

@@ -98,7 +98,12 @@ public class GLView extends GLSurfaceView
 	    			pos.x /= windowBounds.width();
 	    			pos.y /= windowBounds.height();
 	    			//Log.d("onTouchEvent","send to stateLoopThread: ("+pos.x+", "+pos.y+")");
-	    			stateLoopThread.touch(pos);
+	    			stateLoopThread.touch(pos, GameLogicThread.COORDS_GRID);
+	    		} else if( pos.x < windowBounds.left ) {
+	    			// left side menu
+	    			pos.x /= windowBounds.left;
+	    			pos.y /= windowBounds.height();
+	    			stateLoopThread.touch(pos, GameLogicThread.COORDS_LEFT_BAR);
 	    		}
     		} //else {
     			//Log.d("onTouchEvent","windowBounds are null!");

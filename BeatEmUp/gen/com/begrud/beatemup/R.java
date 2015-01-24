@@ -22,14 +22,26 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int black_overlay=0x7f040000;
     }
     public static final class drawable {
-        public static final int ic_launcher=0x7f020000;
-        public static final int particle=0x7f020001;
-        public static final int tiledarkblue=0x7f020002;
-        public static final int tilegreen=0x7f020003;
-        public static final int tilepurple=0x7f020004;
-        public static final int tilered=0x7f020005;
-        public static final int tilewhite=0x7f020006;
-        public static final int tileyellow=0x7f020007;
+        public static final int buttondelete=0x7f020000;
+        public static final int buttondeleteall=0x7f020001;
+        public static final int buttondown=0x7f020002;
+        public static final int buttonnormal=0x7f020003;
+        public static final int buttonplay=0x7f020004;
+        public static final int buttonportal=0x7f020005;
+        public static final int buttonspeaker=0x7f020006;
+        public static final int buttonstop=0x7f020007;
+        public static final int buttonup=0x7f020008;
+        public static final int ic_launcher=0x7f020009;
+        public static final int particle=0x7f02000a;
+        public static final int ringblue=0x7f02000b;
+        public static final int ringorange=0x7f02000c;
+        public static final int ringred=0x7f02000d;
+        public static final int tiledarkblue=0x7f02000e;
+        public static final int tilegreen=0x7f02000f;
+        public static final int tilepurple=0x7f020010;
+        public static final int tilered=0x7f020011;
+        public static final int tilewhite=0x7f020012;
+        public static final int tileyellow=0x7f020013;
     }
     public static final class raw {
         public static final int clap1=0x7f030000;
