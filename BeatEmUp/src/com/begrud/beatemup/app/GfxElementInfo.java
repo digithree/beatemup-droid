@@ -20,4 +20,8 @@ public class GfxElementInfo {
 		new PointF(0.25f, 0.9f), // delete all
 		new PointF(0.75f, 0.9f) // delete
 	};
+	
+	public static final float SPEED_NORMAL = 1.f;
+	public static final float SPEED_FAST = 2.f;
+	public static final float SPEED_SLOW = 0.5f;
 }

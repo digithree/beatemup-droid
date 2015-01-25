@@ -6,6 +6,7 @@ import com.begrud.beatemup.levels.Level;
 
 import android.graphics.Point;
 import android.graphics.PointF;
+import android.util.Log;
 
 public class GameState {
 	// screens
@@ -63,34 +64,42 @@ public class GameState {
 	public static final int STATE_STOPPED = 0;
 	public static final int STATE_PLAYING = 1;
 	public static final int STATE_REVIEW = 2;
+	public static final int STATE_WIN = 3;
 	// portal drop states
-	public static final int PORTAL_STATE_NONE = 0;
-	public static final int PORTAL_STATE_IN = 1;
-	public static final int PORTAL_STATE_OUT_SPEED_FAST = 2;
-	public static final int PORTAL_STATE_OUT_NORMAL = 3;
-	public static final int PORTAL_STATE_OUT_SPEED_SLOW = 4;
+	public static final int INTERACTION_STATE_NONE = 0;
+	public static final int INTERACTION_STATE_PORTAL_IN = 1;
+	public static final int INTERACTION_STATE_PORTAL_OUT = 2;
+	public static final int INTERACTION_STATE_PORTAL_DELETE = 3;
 	// misc portal consts
 	public static final int MAX_PORTALS = 3;
+	//--- speeds
+	public static final int PORTAL_OUT_SPEED_NORMAL = 0;
+	public static final int PORTAL_OUT_SPEED_FAST = 1;
+	public static final int PORTAL_OUT_SPEED_SLOW = 2;
 	
 	private int screen;
 	private int []gridState;
 	private int []gridMod;
 	private int []gridSound;
 	
+	private Point []particleGridPos;
+
 	private PointF []particlePos;
 	private int []particleState;
 	private PointF []particleVec;
-	
+	//private boolean []particleDoesntWarpUntilNextPos;  // TODO : use this?
+	private int particleCurSpeed;
+
 	private int currentState;
-	private int portalState;
+	private int interactionState;
 	
 	// portal making
 	private Point portalInGrid = null;
 	private Point portalOutGrid = null;
 	private Point []portalIn = new Point[MAX_PORTALS];
-
 	private Point []portalOut = new Point[MAX_PORTALS];
-	private int portalPointer = 0;
+	private int []portalOutSpeed = new int[MAX_PORTALS];
+	private int currentPortalOutSpeed = PORTAL_OUT_SPEED_NORMAL;
 
 	GameState() {
 		clear();
@@ -99,11 +108,13 @@ public class GameState {
 	public void clear() {
 		// note: this sets all to default (0)
 		screen = SCREEN_GAME;
+		particleGridPos = new Point[MAX_PARTICLES];
 		particlePos = new PointF[MAX_PARTICLES];
 		particleState = new int[MAX_PARTICLES];
 		particleVec = new PointF[MAX_PARTICLES];
 		for( int i = 0 ; i < particlePos.length ; i++ ) {
 			//particlePos[i] = new PointF(0.125f, 0.125f);
+			particleGridPos[i] = new Point(-1, -1);
 			particlePos[i] = new PointF(PARTICLE_POSITION_DEFAULT.x, PARTICLE_POSITION_DEFAULT.y);
 			particleState[i] = PARTICLE_STATE_OFF;
 			particleVec[i] = new PointF();
@@ -116,7 +127,7 @@ public class GameState {
 		// state
 		currentState = STATE_STOPPED;
 		// portal
-		portalState = PORTAL_STATE_NONE;
+		interactionState = INTERACTION_STATE_NONE;
 	}
 	
 	public void resetGrid() {
@@ -128,14 +139,7 @@ public class GameState {
 			gridMod[i] = GRID_ABILITY_NONE;
 			gridSound[i] = GRID_SOUND_NONE;
 		}
-		// reset portals
-		portalPointer = 0;
-		portalInGrid = null;
-		portalOutGrid = null;
-		for( int i = 0 ; i < MAX_PORTALS ; i++ ) {
-			portalIn[i] = null;
-			portalOut[i] = null;
-		}
+		resetPortals();
 	}
 	
 	public void loadLevel(Level level) {
@@ -276,6 +280,14 @@ public class GameState {
 		return false;
 	}
 	
+	public int getParticleCurSpeed() {
+		return particleCurSpeed;
+	}
+
+	public void setParticleCurSpeed(int particleCurSpeed) {
+		this.particleCurSpeed = particleCurSpeed;
+	}
+	
 	public int getState() {
 		return currentState;
 	}
@@ -286,12 +298,12 @@ public class GameState {
 	
 	
 	// portal state
-	public int getPortalState() {
-		return portalState;
+	public int getInteractionState() {
+		return interactionState;
 	}
 
-	public void setPortalState(int portalState) {
-		this.portalState = portalState;
+	public void setInteractionState(int state) {
+		this.interactionState = state;
 	}
 	
 	// portal building
@@ -315,13 +327,17 @@ public class GameState {
 	public boolean createPortal() {
 		//portalInGrid
 		//portalOutGrid
-		if( portalPointer < 3 ) {
-			portalIn[portalPointer] = new Point(portalInGrid.x, portalInGrid.y);
-			portalOut[portalPointer] = new Point(portalOutGrid.x, portalOutGrid.y);
-			portalInGrid = null;
-			portalOutGrid = null;
-			portalPointer++;
-			return true;
+		for( int i = 0 ; i < MAX_PORTALS ; i++ ) {
+			if( portalIn[i] == null && portalOut[i] == null ) {
+				portalIn[i] = new Point(portalInGrid.x, portalInGrid.y);
+				portalOut[i] = new Point(portalOutGrid.x, portalOutGrid.y);
+				portalOutSpeed[i] = currentPortalOutSpeed;
+				portalInGrid = null;
+				portalOutGrid = null;
+				Log.d("GameState","set portals "+i+": ("+portalIn[i].x+", "+portalIn[i].y+") -> ("
+						+portalOut[i].x+", "+portalOut[i].y+")");
+				return true;
+			}
 		}
 		portalInGrid = null;
 		portalOutGrid = null;
@@ -341,5 +357,52 @@ public class GameState {
 			return portalOut[idx];
 		}
 		return null;
+	}
+	
+	public void resetPortals() {
+		// reset portals
+		portalInGrid = null;
+		portalOutGrid = null;
+		for( int i = 0 ; i < MAX_PORTALS ; i++ ) {
+			portalIn[i] = null;
+			portalOut[i] = null;
+			portalOutSpeed[i] = PORTAL_OUT_SPEED_NORMAL;
+		}
+		currentPortalOutSpeed = PORTAL_OUT_SPEED_NORMAL;
+	}
+	
+	// delete one portal pair
+	public void deletePortal(int idx) {
+		if( idx >= 0 && idx < MAX_PORTALS ) {
+			portalIn[idx] = null;
+			portalOut[idx] = null;
+			portalOutSpeed[idx] = PORTAL_OUT_SPEED_NORMAL;
+		}
+	}
+	
+	// speed request
+	public int getPortalOutSpeed(int idx) {
+		if( idx >= 0 && idx < MAX_PORTALS ) {
+			return portalOutSpeed[idx];
+		}
+		return PORTAL_OUT_SPEED_NORMAL; 
+	}
+	
+	public int getCurrentPortalOutSpeed() {
+		return currentPortalOutSpeed;
+	}
+
+	public void setCurrentPortalOutSpeed(int currentPortalOutSpeed) {
+		this.currentPortalOutSpeed = currentPortalOutSpeed;
+	}
+	
+	
+	/// asdasd
+	public Point[] getParticleGridPos() {
+		return particleGridPos;
+	}
+
+	public void setParticleGridPos(Point[] particleGridPos) {
+		this.particleGridPos = particleGridPos;
 	}
 }

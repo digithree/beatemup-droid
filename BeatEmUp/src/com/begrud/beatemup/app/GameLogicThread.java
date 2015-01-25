@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.begrud.beatemup.animation.GridFlashAnimation;
 import com.begrud.beatemup.animation.TimeDecayObject;
+import com.begrud.beatemup.levels.Level;
 import com.begrud.beatemup.levels.Level1_1;
 
 import android.content.Context;
@@ -61,7 +62,9 @@ public class GameLogicThread extends Thread {
 	
 	private List<TimeDecayObject> animationEventsList = new ArrayList<TimeDecayObject>();
 	
-	private float insideGridPortalWarpPadding = 0.1f;
+	private float insideGridPortalWarpPadding = 0.2f;
+	
+	private Level curLevel;
 	
 	
 	private void init() {
@@ -92,7 +95,8 @@ public class GameLogicThread extends Thread {
 					);
 		}
 		// Load first level
-		gameState.loadLevel(new Level1_1());
+		curLevel = new Level1_1();
+		gameState.loadLevel(curLevel);
 	}
 	
 	// coordinate is normalised and adjusted for window, not screen size
@@ -112,28 +116,51 @@ public class GameLogicThread extends Thread {
 				}
 				*/
 				// condition on portal state
-				if( gameState.getPortalState() == GameState.PORTAL_STATE_IN ) {
+				if( gameState.getInteractionState() == GameState.INTERACTION_STATE_PORTAL_IN ) {
 					Log.d("GameLogicThread", "portal in SET...");
 					gameState.setPortalInGrid(new Point(x,y));
-					gameState.setPortalState(GameState.PORTAL_STATE_OUT_NORMAL); // TODO : set this to last portal out state
-					Log.d("GameLogicThread", "portal out normal START");
-				} else if( gameState.getPortalState() == GameState.PORTAL_STATE_OUT_NORMAL ) {
-					Log.d("GameLogicThread", "portal out normal SET...");
+					gameState.setInteractionState(GameState.INTERACTION_STATE_PORTAL_OUT); // TODO : set this to last portal out state
+					Log.d("GameLogicThread", "portal out START");
+				} else if( gameState.getInteractionState() == GameState.INTERACTION_STATE_PORTAL_OUT ) {
+					Log.d("GameLogicThread", "portal out SET...");
 					Point portalIn = gameState.getPortalInGrid();
-					if( portalIn.x != x && portalIn.y != y ) {
-						gameState.setPortalOutGrid(new Point(x,y));
-						// TODO : make portal!
-						if( gameState.createPortal() ) {
-							Log.d("GameLogicThread", "portal out normal SET!");
-							gameState.setPortalState(GameState.PORTAL_STATE_NONE);
-						}
+					boolean doCreatePortal = true;
+					if( portalIn == null ) {
+						doCreatePortal = false;
 					} else {
+						if( portalIn.x == x && portalIn.y == y ) {
+							doCreatePortal = false;
+						}
+					}
+					if( !doCreatePortal ) {
 						// failed, leave portal building states
-						gameState.setPortalState(GameState.PORTAL_STATE_NONE);
+						gameState.setInteractionState(GameState.INTERACTION_STATE_NONE);
 						gameState.setPortalInGrid(null);
-						Log.d("GameLogicThread", "portal out normal QUIT");
+						Log.d("GameLogicThread", "portal out QUIT");
+					} else {
+						gameState.setPortalOutGrid(new Point(x,y));
+						Log.d("GameLogicThread", "portal out to "+x+", "+y);
+						if( gameState.createPortal() ) {
+							Log.d("GameLogicThread", "portal out SET!");
+							gameState.setInteractionState(GameState.INTERACTION_STATE_NONE);
+						}
 					}
 				} // TODO : add for other portal out states
+				else if( gameState.getInteractionState() == GameState.INTERACTION_STATE_PORTAL_DELETE ) {
+					for( int i = 0 ; i < GameState.MAX_PORTALS ; i++ ) {
+						Point portalIn = gameState.getPortalIn(i);
+						Point portalOut = gameState.getPortalOut(i);
+						if( portalIn != null && portalOut != null ) {
+							if( (portalIn.x == x && portalIn.y == y) 
+									|| (portalOut.x == x && portalOut.y == y) ) {
+								// delete portal
+								gameState.deletePortal(i);
+								gameState.setInteractionState(GameState.INTERACTION_STATE_NONE);
+								break;
+							}
+						}
+					}
+				}
 			} else if( state == COORDS_LEFT_BAR ) {
 				// left bar				
 				if( leftNavButtonsBounds[GameState.BUTTON_PLAY_STOP].contains(pos.x, pos.y) ) {
@@ -141,6 +168,8 @@ public class GameLogicThread extends Thread {
 					if( gameState.getState() == GameState.STATE_STOPPED ) {
 						gameState.setState(GameState.STATE_PLAYING);
 						// start particle
+						gameState.getParticleGridPos()[0] = new Point(-1, -1);
+						gameState.setParticleCurSpeed(GameState.PORTAL_OUT_SPEED_NORMAL);
 						gameState.setParticleState(0, GameState.PARTICLE_STATE_ON);
 						gameState.setParticleVec(0, new PointF(1.f, 0.f));
 					} else if( gameState.getState() == GameState.STATE_PLAYING ) {
@@ -154,15 +183,35 @@ public class GameLogicThread extends Thread {
 				} else if( leftNavButtonsBounds[GameState.BUTTON_PORTAL].contains(pos.x, pos.y) ) {
 					Log.d("touch","left nav: portal in?");
 					if( gameState.getState() != GameState.STATE_REVIEW ) {
-						if( gameState.getPortalState() == GameState.PORTAL_STATE_NONE ) {
-							gameState.setPortalState(GameState.PORTAL_STATE_IN);
+						if( gameState.getInteractionState() == GameState.INTERACTION_STATE_NONE ) {
+							gameState.setInteractionState(GameState.INTERACTION_STATE_PORTAL_IN);
 							Log.d("touch","left nav: portal in START");
 						}
 					}
 				} else if( leftNavButtonsBounds[GameState.BUTTON_NORMAL].contains(pos.x, pos.y) ) {
 					Log.d("touch","left nav: portal out normal");
 					if( gameState.getState() != GameState.STATE_REVIEW ) {
-						// not important now
+						gameState.setCurrentPortalOutSpeed(GameState.PORTAL_OUT_SPEED_NORMAL);
+					}
+				} else if( leftNavButtonsBounds[GameState.BUTTON_UP].contains(pos.x, pos.y) ) {
+					Log.d("touch","left nav: portal out normal");
+					if( gameState.getState() != GameState.STATE_REVIEW ) {
+						gameState.setCurrentPortalOutSpeed(GameState.PORTAL_OUT_SPEED_FAST);
+					}
+				} else if( leftNavButtonsBounds[GameState.BUTTON_DOWN].contains(pos.x, pos.y) ) {
+					Log.d("touch","left nav: portal out normal");
+					if( gameState.getState() != GameState.STATE_REVIEW ) {
+						gameState.setCurrentPortalOutSpeed(GameState.PORTAL_OUT_SPEED_SLOW);
+					}
+				} else if( leftNavButtonsBounds[GameState.BUTTON_DELETEALL].contains(pos.x, pos.y) ) {
+					gameState.resetPortals();
+				} else if( leftNavButtonsBounds[GameState.BUTTON_DELETE].contains(pos.x, pos.y) ) {
+					if( gameState.getState() != GameState.STATE_REVIEW ) {
+						if( gameState.getInteractionState() != GameState.INTERACTION_STATE_NONE ) {
+							// reset portal setting
+							gameState.setPortalInGrid(null);
+						}
+						gameState.setInteractionState(GameState.INTERACTION_STATE_PORTAL_DELETE);
 					}
 				}
 			}
@@ -207,24 +256,70 @@ public class GameLogicThread extends Thread {
 									// going left
 									pos.x -= (float)(portalIn.x-(portalOut.x+1))*0.2f;
 									pos.y -= (float)(portalIn.y-portalOut.y)*0.2f;
+									warped = true;
 								} else if( insidePos.x >= (1.f-insideGridPortalWarpPadding)
 										&& vec.x > 0.f ) {
 									// going right
 									pos.x -= (float)(portalIn.x-(portalOut.x-1))*0.2f;
 									pos.y -= (float)(portalIn.y-portalOut.y)*0.2f;
+									warped = true;
 								} else if( insidePos.y < insideGridPortalWarpPadding
 										&& vec.y < 0.f ) {
 									// going up
 									pos.x -= (float)(portalIn.x-portalOut.x)*0.2f;
 									pos.y -= (float)(portalIn.y-(portalOut.y+1))*0.2f;
+									warped = true;
 								} else if( insidePos.y >= (1.f-insideGridPortalWarpPadding)
 										&& vec.y > 0.f ) {
 									// going down
 									pos.x -= (float)(portalIn.x-portalOut.x)*0.2f;
 									pos.y -= (float)(portalIn.y-(portalOut.y-1))*0.2f;
+									warped = true;
 								}
-								//pos.x -= (float)(portalIn.x-portalOut.x)*0.2f;
-								//pos.y -= (float)(portalIn.y-portalOut.y)*0.2f;
+								if( warped ) {
+									// set speed out of portal
+									if( gameState.getPortalOutSpeed(j) == GameState.PORTAL_OUT_SPEED_NORMAL ) {
+										Log.d("GameLogicThread","Setting particle speed: normal");
+										gameState.setParticleCurSpeed(GameState.PORTAL_OUT_SPEED_NORMAL);
+										if( vec.x > 0.f ) {
+											vec.x = GfxElementInfo.SPEED_NORMAL;
+										} else if( vec.x < 0.f ) {
+											vec.x = -GfxElementInfo.SPEED_NORMAL;
+										}
+										if( vec.y > 0.f ) {
+											vec.y = GfxElementInfo.SPEED_NORMAL;
+										} else if( vec.y < 0.f ) {
+											vec.y = -GfxElementInfo.SPEED_NORMAL;
+										}
+									} else if( gameState.getPortalOutSpeed(j) == GameState.PORTAL_OUT_SPEED_FAST ) {
+										Log.d("GameLogicThread","Setting particle speed: fast");
+										gameState.setParticleCurSpeed(GameState.PORTAL_OUT_SPEED_FAST);
+										if( vec.x > 0.f ) {
+											vec.x = GfxElementInfo.SPEED_FAST;
+										} else if( vec.x < 0.f ) {
+											vec.x = -GfxElementInfo.SPEED_FAST;
+										}
+										if( vec.y > 0.f ) {
+											vec.y = GfxElementInfo.SPEED_FAST;
+										} else if( vec.y < 0.f ) {
+											vec.y = -GfxElementInfo.SPEED_FAST;
+										}
+									} else if( gameState.getPortalOutSpeed(j) == GameState.PORTAL_OUT_SPEED_SLOW ) {
+										Log.d("GameLogicThread","Setting particle speed: slow");
+										gameState.setParticleCurSpeed(GameState.PORTAL_OUT_SPEED_SLOW);
+										if( vec.x > 0.f ) {
+											vec.x = GfxElementInfo.SPEED_SLOW;
+										} else if( vec.x < 0.f ) {
+											vec.x = -GfxElementInfo.SPEED_SLOW;
+										}
+										if( vec.y > 0.f ) {
+											vec.y = GfxElementInfo.SPEED_SLOW;
+										} else if( vec.y < 0.f ) {
+											vec.y = -GfxElementInfo.SPEED_SLOW;
+										}
+									}
+									gameState.setParticleVec(i, vec);
+								}
 							}
 						}
 					}
@@ -243,14 +338,24 @@ public class GameLogicThread extends Thread {
 					}
 					// trigger condition
 					for( int j = 0 ; j < GameState.GRID_SIZE_ONE_D ; j++ ) {
+						Point []lastGridPos = gameState.getParticleGridPos();
 						if( gridActiveAreaBounds[j].contains(pos.x, pos.y) ) {
 							int gridX = (int)(pos.x*5);
 							int gridY = (int)(pos.y*5);
-							gameState.setGridState(gridX, gridY, GameState.GRID_STATE_ACTIVE);
-							animationEventsList.add(new GridFlashAnimation(gameState, gridX, gridY));
-							soundPlayer.play(gameState.getGridSound(gridX, gridY));
-							// TODO : reactivate sound!
-							//Log.d("GameLogicThread","grid ("+gridX+", "+gridY+") active");
+							if( !(lastGridPos[i].x == gridX && lastGridPos[i].y == gridY) ) {
+								lastGridPos[i].x = gridX;
+								lastGridPos[i].y = gridY;
+								gameState.setGridState(gridX, gridY, GameState.GRID_STATE_ACTIVE);
+								animationEventsList.add(new GridFlashAnimation(gameState, gridX, gridY));
+								int sound = gameState.getGridSound(gridX, gridY);
+								soundPlayer.play(sound);
+								// check if player has won game
+								if( curLevel.addBeat(sound, gameState.getParticleCurSpeed()) ) {
+									// win!!!
+									Log.d("WINWINWIN","WINWINWINWINWINWINWINWINWINWINW");
+									gameState.setState(GameState.STATE_WIN);
+								}
+							}
 						}
 					}
 				}

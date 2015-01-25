@@ -36,12 +36,15 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int ringblue=0x7f02000b;
         public static final int ringorange=0x7f02000c;
         public static final int ringred=0x7f02000d;
-        public static final int tiledarkblue=0x7f02000e;
-        public static final int tilegreen=0x7f02000f;
-        public static final int tilepurple=0x7f020010;
-        public static final int tilered=0x7f020011;
-        public static final int tilewhite=0x7f020012;
-        public static final int tileyellow=0x7f020013;
+        public static final int ringreddown=0x7f02000e;
+        public static final int ringredup=0x7f02000f;
+        public static final int tiledarkblue=0x7f020010;
+        public static final int tilegreen=0x7f020011;
+        public static final int tilepurple=0x7f020012;
+        public static final int tilered=0x7f020013;
+        public static final int tilewhite=0x7f020014;
+        public static final int tileyellow=0x7f020015;
+        public static final int win=0x7f020016;
     }
     public static final class raw {
         public static final int clap1=0x7f030000;

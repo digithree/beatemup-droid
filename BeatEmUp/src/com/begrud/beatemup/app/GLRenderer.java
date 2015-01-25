@@ -8,7 +8,6 @@ import com.begrud.beatemup.R;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.RectF;
 import android.opengl.GLSurfaceView.Renderer;
 
 
@@ -29,6 +28,9 @@ public class GLRenderer implements Renderer
 	private PointF []buttonPos;
 	
 	private Tex []portals;
+	
+	private Tex win;
+	
 	
 	private boolean firsttime = true;
 	private float hor = 1.0f;
@@ -114,7 +116,8 @@ public class GLRenderer implements Renderer
 		// portal out
 		if( gameState.getPortalOutGrid() != null ) {
 			Point portalOut = gameState.getPortalOutGrid();
-			portals[1].draw(
+			int speed = gameState.getCurrentPortalOutSpeed();
+			portals[1+speed].draw(
 					xOffset + (ver*(sizeFactor*((float)portalOut.x+0.5f))),
 					ver - ((ver*(sizeFactor*((float)portalOut.y+0.5f)))),  //"ver -" flips y axis
 					//(ver*0.2f)+
@@ -134,7 +137,8 @@ public class GLRenderer implements Renderer
 						sizeFactor*ver,
 						sizeFactor*ver);
 				// portal out
-				portals[1].draw(
+				int speed = gameState.getPortalOutSpeed(i); 
+				portals[1+speed].draw(
 						xOffset + (ver*(sizeFactor*((float)portalOut.x+0.5f))),
 						ver - ((ver*(sizeFactor*((float)portalOut.y+0.5f)))),  //"ver -" flips y axis
 						//(ver*0.2f)+
@@ -154,6 +158,15 @@ public class GLRenderer implements Renderer
 						sizeFactor*ver,
 						sizeFactor*ver);
 			}
+		}
+		
+		// win
+		if( gameState.getState() == GameState.STATE_WIN ) {
+			win.draw(
+					hor / 2.f,
+					ver / 2.f,
+					ver / 2.f,
+					ver / 4.f);
 		}
 	}
 
@@ -213,7 +226,7 @@ public class GLRenderer implements Renderer
 	
 		textures = new Tex[7];	//annoyingly just 1 too many...
 		buttons = new Tex[9];
-		portals = new Tex[2];
+		portals = new Tex[4];
 		
 		// fullscreen images -- .25seconds loading total //
 		textures[0] = new Tex(gl, this.context, R.drawable.tilegreen);
@@ -238,5 +251,10 @@ public class GLRenderer implements Renderer
 		// portals
 		portals[0] = new Tex(gl, this.context, R.drawable.ringblue);
 		portals[1] = new Tex(gl, this.context, R.drawable.ringred);
+		portals[2] = new Tex(gl, this.context, R.drawable.ringredup);
+		portals[3] = new Tex(gl, this.context, R.drawable.ringreddown);
+		
+		// win
+		win = new Tex(gl, this.context, R.drawable.win);
 	}
 }
