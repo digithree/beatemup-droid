@@ -32,6 +32,12 @@ public class SoundPlayer {
 				resId = R.raw.clap1;
 			} else if( idx == GameState.GRID_SOUND_2 ) {
 				resId = R.raw.snare1;
+			} else if( idx == GameState.GRID_SOUND_3 ) {
+				resId = R.raw.crunch1;
+			} else if( idx == GameState.GRID_SOUND_4 ) {
+				resId = R.raw.snare2;
+			} else if( idx == GameState.GRID_SOUND_5 ) {
+				resId = R.raw.hat1;
 			}
 		}
     	if( resId >= 0 ) {

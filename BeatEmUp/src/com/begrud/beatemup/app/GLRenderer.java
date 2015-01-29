@@ -29,8 +29,9 @@ public class GLRenderer implements Renderer
 	
 	private Tex []portals;
 	
-	private Tex win;
+	private Tex []screens;
 	
+	private Tex []modifiers;
 	
 	private boolean firsttime = true;
 	private float hor = 1.0f;
@@ -52,6 +53,15 @@ public class GLRenderer implements Renderer
 		 * calls can only be made by that thread.
 		 */
 	}
+	
+	private void drawButton(float xLeftNavScale, int buttonIdx, int infoIdx) {
+		buttons[buttonIdx].draw(
+				(xLeftNavScale*GfxElementInfo.leftNavButtonPositions[infoIdx].x),
+				ver - ((ver*GfxElementInfo.leftNavButtonPositions[infoIdx].y)),  //"ver -" flips y axis
+				//(ver*0.2f)+
+				GfxElementInfo.leftNavButtonSize*ver*2,
+				GfxElementInfo.leftNavButtonSize*ver*2);
+	}
 
 	@Override
 	public void onDrawFrame(GL10 gl) 
@@ -71,33 +81,121 @@ public class GLRenderer implements Renderer
 		
 		/* DRAWSCREEN BASED ON GAMESTATE */
 		
-		// draw left nav buttons
+		// left nav background (grey)
 		float xLeftNavScale = (hor/2.f) - (ver/2.f);
-		for( int i = 0 ; i < GfxElementInfo.leftNavButtonNum ; i++ ) {
-			int idx = i;
-			if( i == GameState.BUTTON_PLAY_STOP ) {
-				idx = gameState.getState() == GameState.STATE_PLAYING ? 8 : 1;
-			}
-			buttons[idx].draw(
-					(xLeftNavScale*GfxElementInfo.leftNavButtonPositions[i].x),
-					ver - ((ver*GfxElementInfo.leftNavButtonPositions[i].y)),  //"ver -" flips y axis
-					//(ver*0.2f)+
-					GfxElementInfo.leftNavButtonSize*ver,
-					GfxElementInfo.leftNavButtonSize*ver);
+		textures[7].draw(
+				0+(xLeftNavScale/2.f),
+				(ver/2.f),
+				xLeftNavScale,
+				ver
+				);
+		// draw left nav buttons
+		/*
+		 * buttons[0] = new Tex(gl, this.context, R.drawable.questionup);   //depress
+			buttons[1] = new Tex(gl, this.context, R.drawable.playup); 		alternate
+			buttons[2] = new Tex(gl, this.context, R.drawable.portalenterup);   //depress
+			buttons[3] = new Tex(gl, this.context, R.drawable.portalexitfastup);  state
+			buttons[4] = new Tex(gl, this.context, R.drawable.portalexitup);  		state
+			buttons[5] = new Tex(gl, this.context, R.drawable.portalexitslowup);   state
+			buttons[6] = new Tex(gl, this.context, R.drawable.binup);      //depress
+			buttons[7] = new Tex(gl, this.context, R.drawable.xup);       //state
+			buttons[8] = new Tex(gl, this.context, R.drawable.pauseup);   alternate
+			// pressed
+		buttons[9] = new Tex(gl, this.context, R.drawable.questiondown);
+		buttons[10] = new Tex(gl, this.context, R.drawable.portalenterdown);
+		buttons[11] = new Tex(gl, this.context, R.drawable.bindown);
+		buttons[12] = new Tex(gl, this.context, R.drawable.xdown);
+		 */
+		// replay
+		drawButton(xLeftNavScale, 0, 0);
+		// play / pause
+		if( gameState.getState() == GameState.STATE_PLAYING ) {
+			drawButton(xLeftNavScale, 8, 1);
+		} else {
+			drawButton(xLeftNavScale, 1, 1);
 		}
-
-		/* draw grid */
+		// portal enter
+		if( gameState.getInteractionState() == GameState.INTERACTION_STATE_NONE 
+				|| gameState.getInteractionState() == GameState.INTERACTION_STATE_PORTAL_DELETE ) {
+			drawButton(xLeftNavScale, 2, 2);
+		} else {
+			drawButton(xLeftNavScale, 10, 2);
+		}
+		// portal exit
+		// - portal fast
+		if( gameState.getCurrentPortalOutSpeed() != GameState.PORTAL_OUT_SPEED_FAST ) {
+			drawButton(xLeftNavScale, 3, 3);
+		} else {
+			drawButton(xLeftNavScale, 13, 3);
+		}
+		// - portal normal
+		if( gameState.getCurrentPortalOutSpeed() != GameState.PORTAL_OUT_SPEED_NORMAL ) {
+			drawButton(xLeftNavScale, 4, 4);
+		} else {
+			drawButton(xLeftNavScale, 14, 4);
+		}
+		// - portal slow
+		if( gameState.getCurrentPortalOutSpeed() != GameState.PORTAL_OUT_SPEED_SLOW ) {
+			drawButton(xLeftNavScale, 5, 5);
+		} else {
+			drawButton(xLeftNavScale, 15, 5);
+		}
+		// bin
+		if( gameState.getBinButtonState() == GameState.BUTTON_UNPRESSED ) {
+			drawButton(xLeftNavScale, 6, 6);
+		} else {
+			drawButton(xLeftNavScale, 11, 6);
+		}
+		// delete
+		if( gameState.getInteractionState() != GameState.INTERACTION_STATE_PORTAL_DELETE ) {
+			drawButton(xLeftNavScale, 7, 7);
+		} else {
+			drawButton(xLeftNavScale, 12, 7);
+		}
+		
+		// draw grid notes
 		float xOffset = (hor/2.f)-(ver/2.f);
 		float sizeFactor = 0.2f;
 		for( int j = 0 ; j < 5 ; j++ ) {
 			for( int i = 0 ; i < 5 ; i++ ) {
 				int gridTex = gameState.getGridTex(i, j);
-				textures[gridTex].draw(
+				textures[0].draw(
 						xOffset + (ver*(sizeFactor*((float)i+0.5f))),
 						ver - ((ver*(sizeFactor*((float)j+0.5f)))),  //"ver -" flips y axis
 						//(ver*0.2f)+
 						sizeFactor*ver,
 						sizeFactor*ver);
+				if( gridTex < 100 ) {
+					textures[gridTex].draw(
+							xOffset + (ver*(sizeFactor*((float)i+0.5f))),
+							ver - ((ver*(sizeFactor*((float)j+0.5f)))),  //"ver -" flips y axis
+							//(ver*0.2f)+
+							sizeFactor*ver,
+							sizeFactor*ver);
+				} else {
+					gridTex -= 100;
+					textures[gridTex].draw(
+							xOffset + (ver*(sizeFactor*((float)i+0.5f))),
+							ver - ((ver*(sizeFactor*((float)j+0.5f)))),  //"ver -" flips y axis
+							//(ver*0.2f)+
+							sizeFactor*ver*0.5f,
+							sizeFactor*ver*0.5f);
+				}
+			}
+		}
+		
+		// draw modifiers
+		for( int j = 0 ; j < 5 ; j++ ) {
+			for( int i = 0 ; i < 5 ; i++ ) {
+				int mod = gameState.getGridMod(i, j);
+				if( mod != GameState.GRID_MOD_NONE ) {
+					modifiers[mod-1].draw(
+							xOffset + (ver*(sizeFactor*((float)i+0.5f))),
+							ver - ((ver*(sizeFactor*((float)j+0.5f)))),  //"ver -" flips y axis
+							//(ver*0.2f)+
+							sizeFactor*ver,
+							sizeFactor*ver);
+				}
 			}
 		}
 		
@@ -151,7 +249,7 @@ public class GLRenderer implements Renderer
 		for( int i = 0 ; i < GameState.MAX_PARTICLES ; i++ ) {
 			if( gameState.getParticleState(i) == GameState.PARTICLE_STATE_ON ) {
 				PointF pos = gameState.getParticlePos(i);
-				textures[GameState.PARTICLE_TEX_DEFAULT].draw(
+				textures[6].draw(
 						xOffset + (ver*pos.x),
 						ver - ((ver*pos.y)),  //"ver -" flips y axis
 						//(ver*0.2f)+
@@ -160,13 +258,115 @@ public class GLRenderer implements Renderer
 			}
 		}
 		
+		// draw right hints
+		//xLeftNavScale
+		// draw bg
+		textures[7].draw(
+				ver + xOffset + (xLeftNavScale/2.f),
+				(ver/2.f),
+				xLeftNavScale,
+				ver
+				);
+		// draw hints
+		float hintScaleFactor = 0.5f;
+		sizeFactor *= hintScaleFactor;
+		for( int i = 0 ; i < gameState.getCurLevel().getSEQUENCE().length ; i++ ) {
+			int seqElement = gameState.getCurLevel().getSEQUENCE()[i];
+			if( seqElement != -1 ) {
+				if( seqElement == 0 ) {
+					seqElement = 7;
+				}
+				textures[seqElement].draw(
+						ver + xOffset + (xLeftNavScale * 0.75f),
+						ver - ((ver*(sizeFactor*((float)i+0.5f)))),  //"ver -" flips y axis
+						sizeFactor*ver,
+						sizeFactor*ver);
+				// overlay speed if not normal speed
+				int speed = gameState.getCurLevel().getGoalSpeeds()[i];
+				if( speed == GameState.PORTAL_OUT_SPEED_FAST ) {
+					buttons[3].draw( // fast
+							ver + xOffset + (xLeftNavScale * 0.75f),
+							ver - ((ver*(sizeFactor*((float)i+0.5f)))),  //"ver -" flips y axis
+							sizeFactor*ver*0.5f,
+							sizeFactor*ver*0.5f);
+				} else if( speed == GameState.PORTAL_OUT_SPEED_SLOW ) {
+					buttons[5].draw( // fast
+							ver + xOffset + (xLeftNavScale * 0.75f),
+							ver - ((ver*(sizeFactor*((float)i+0.5f)))),  //"ver -" flips y axis
+							sizeFactor*ver*0.5f,
+							sizeFactor*ver*0.5f);
+				}
+			}
+		}
+		// draw current list of last passed tiles
+		for( int i = 0 ; i < gameState.getCurLevel().getSEQUENCE().length ; i++ ) {
+			int seqElement = gameState.getCurLevel().getActiveSequence()[i];
+			if( seqElement != -1 ) {
+				if( seqElement == 0 ) {
+					seqElement = 7;
+				}
+				textures[seqElement].draw(
+						ver + xOffset + (xLeftNavScale * 0.25f),
+						ver - ((ver*(sizeFactor*((float)i+0.5f)))),  //"ver -" flips y axis
+						sizeFactor*ver,
+						sizeFactor*ver);
+				// overlay speed if not normal speed
+				int speed = gameState.getCurLevel().getActiveSpeed()[i];
+				if( speed == GameState.PORTAL_OUT_SPEED_FAST ) {
+					buttons[3].draw( // fast
+							ver + xOffset + (xLeftNavScale * 0.25f),
+							ver - ((ver*(sizeFactor*((float)i+0.5f)))),  //"ver -" flips y axis
+							sizeFactor*ver*0.5f,
+							sizeFactor*ver*0.5f);
+				} else if( speed == GameState.PORTAL_OUT_SPEED_SLOW ) {
+					buttons[5].draw( // fast
+							ver + xOffset + (xLeftNavScale * 0.25f),
+							ver - ((ver*(sizeFactor*((float)i+0.5f)))),  //"ver -" flips y axis
+							sizeFactor*ver*0.5f,
+							sizeFactor*ver*0.5f);
+				}
+			}
+		}
+		
 		// win
 		if( gameState.getState() == GameState.STATE_WIN ) {
-			win.draw(
+			screens[0].draw(
 					hor / 2.f,
 					ver / 2.f,
+					hor,
+					ver);
+		} else if( gameState.getState() == GameState.STATE_REVIEW ) {
+			screens[1].draw(
+					hor / 2.f,
 					ver / 2.f,
-					ver / 4.f);
+					hor,
+					ver);
+		} else if( gameState.getState() == GameState.STATE_FINISHED_LEVELS ) {
+			screens[2].draw(
+					hor / 2.f,
+					ver / 2.f,
+					hor,
+					ver);
+		}
+		// intro
+		if( gameState.getState() == GameState.STATE_TITLE_SCREEN ) {
+			screens[3].draw(
+					hor / 2.f,
+					ver / 2.f,
+					hor,
+					ver);
+		} else if( gameState.getState() == GameState.STATE_TUTORIAL_1 ) {
+			screens[4].draw(
+					hor / 2.f,
+					ver / 2.f,
+					hor,
+					ver);
+		} else if( gameState.getState() == GameState.STATE_TUTORIAL_2 ) {
+			screens[5].draw(
+					hor / 2.f,
+					ver / 2.f,
+					hor,
+					ver);
 		}
 	}
 
@@ -224,37 +424,59 @@ public class GLRenderer implements Renderer
 		/* cache the gl context for use with Tex obj */
 		this.gl = gl;
 	
-		textures = new Tex[7];	//annoyingly just 1 too many...
-		buttons = new Tex[9];
+		textures = new Tex[8];
+		buttons = new Tex[16];
 		portals = new Tex[4];
+		screens = new Tex[6];
+		modifiers = new Tex[4];
 		
 		// fullscreen images -- .25seconds loading total //
-		textures[0] = new Tex(gl, this.context, R.drawable.tilegreen);
-		textures[1] = new Tex(gl, this.context, R.drawable.tilered);
-		textures[2] = new Tex(gl, this.context, R.drawable.tileyellow);
-		textures[3] = new Tex(gl, this.context, R.drawable.particle);
-		textures[4] = new Tex(gl, this.context, R.drawable.tilepurple);
-		textures[5] = new Tex(gl, this.context, R.drawable.tilewhite);
-		textures[6] = new Tex(gl, this.context, R.drawable.tiledarkblue);
+		textures[0] = new Tex(gl, this.context, R.drawable.tileground01);
+		textures[1] = new Tex(gl, this.context, R.drawable.tilebeet01);
+		textures[2] = new Tex(gl, this.context, R.drawable.tilebeet02);
+		textures[3] = new Tex(gl, this.context, R.drawable.tilebeet03);
+		textures[4] = new Tex(gl, this.context, R.drawable.tilebeet04);
+		textures[5] = new Tex(gl, this.context, R.drawable.tilebeet05);
+		textures[6] = new Tex(gl, this.context, R.drawable.doodad);
+		textures[7] = new Tex(gl, this.context, R.drawable.backgroundgrey);
 		
 		// buttons
-		buttons[0] = new Tex(gl, this.context, R.drawable.buttonspeaker);
-		buttons[1] = new Tex(gl, this.context, R.drawable.buttonplay);
-		buttons[2] = new Tex(gl, this.context, R.drawable.buttonportal);
-		buttons[3] = new Tex(gl, this.context, R.drawable.buttonup);
-		buttons[4] = new Tex(gl, this.context, R.drawable.buttonnormal);
-		buttons[5] = new Tex(gl, this.context, R.drawable.buttondown);
-		buttons[6] = new Tex(gl, this.context, R.drawable.buttondeleteall);
-		buttons[7] = new Tex(gl, this.context, R.drawable.buttondelete);
-		buttons[8] = new Tex(gl, this.context, R.drawable.buttonstop);
+		buttons[0] = new Tex(gl, this.context, R.drawable.questionup);
+		buttons[1] = new Tex(gl, this.context, R.drawable.playup);
+		buttons[2] = new Tex(gl, this.context, R.drawable.portalenterup);
+		buttons[3] = new Tex(gl, this.context, R.drawable.portalexitfastup);
+		buttons[4] = new Tex(gl, this.context, R.drawable.portalexitup);
+		buttons[5] = new Tex(gl, this.context, R.drawable.portalexitslowup);
+		buttons[6] = new Tex(gl, this.context, R.drawable.binup);
+		buttons[7] = new Tex(gl, this.context, R.drawable.xup);
+		buttons[8] = new Tex(gl, this.context, R.drawable.pauseup);
+		// pressed
+		buttons[9] = new Tex(gl, this.context, R.drawable.questiondown);
+		buttons[10] = new Tex(gl, this.context, R.drawable.portalenterdown);
+		buttons[11] = new Tex(gl, this.context, R.drawable.bindown);
+		buttons[12] = new Tex(gl, this.context, R.drawable.xdown);
+		// portal out
+		buttons[13] = new Tex(gl, this.context, R.drawable.portalexitfastdown);
+		buttons[14] = new Tex(gl, this.context, R.drawable.portalexitdown);
+		buttons[15] = new Tex(gl, this.context, R.drawable.portalexitslowdown);
 		
 		// portals
-		portals[0] = new Tex(gl, this.context, R.drawable.ringblue);
-		portals[1] = new Tex(gl, this.context, R.drawable.ringred);
-		portals[2] = new Tex(gl, this.context, R.drawable.ringredup);
-		portals[3] = new Tex(gl, this.context, R.drawable.ringreddown);
+		portals[0] = new Tex(gl, this.context, R.drawable.tileportalblue);
+		portals[1] = new Tex(gl, this.context, R.drawable.tileportalorange);
+		portals[2] = new Tex(gl, this.context, R.drawable.tileportalorange);
+		portals[3] = new Tex(gl, this.context, R.drawable.tileportalorange);
 		
 		// win
-		win = new Tex(gl, this.context, R.drawable.win);
+		screens[0] = new Tex(gl, this.context, R.drawable.screenlevelcomplete);
+		screens[1] = new Tex(gl, this.context, R.drawable.screenlevelreview);
+		screens[2] = new Tex(gl, this.context, R.drawable.screencredits);
+		screens[3] = new Tex(gl, this.context, R.drawable.introscreen01);
+		screens[4] = new Tex(gl, this.context, R.drawable.introscreen02);
+		screens[5] = new Tex(gl, this.context, R.drawable.introscreen03);
+		
+		modifiers[0] = new Tex(gl, this.context, R.drawable.moddirectionup);
+		modifiers[1] = new Tex(gl, this.context, R.drawable.moddirectionright);
+		modifiers[2] = new Tex(gl, this.context, R.drawable.moddirectiondown);
+		modifiers[3] = new Tex(gl, this.context, R.drawable.moddirectionleft);
 	}
 }

@@ -19,7 +19,8 @@ public class GameState {
 	public static final int PARTICLE_STATE_OFF = 0;
 	public static final int PARTICLE_STATE_ON = 1;
 	// --- data
-	public static final float PARTICLE_SPEED_NORMAL = 0.5f; // gridState movement per second
+	public static final float PARTICLE_SPEED_GRID = 0.4f; // for grid movement
+	public static final float PARTICLE_SPEED_REVIEW = 0.5f; // for review
 	public static final PointF PARTICLE_POSITION_DEFAULT = new PointF(0.1f, 0.1f);
 	// **---textures
 	public static final int PARTICLE_TEX_DEFAULT = 3;
@@ -32,11 +33,18 @@ public class GameState {
 	public static final int GRID_STATE_DEFAULT = 0;
 	public static final int GRID_STATE_ACTIVE = 1;
 	// --- modifier
-	public static final int GRID_ABILITY_NONE = 0;
+	public static final int GRID_MOD_NONE = 0;
+	public static final int GRID_MOD_UP = 1;
+	public static final int GRID_MOD_RIGHT = 2;
+	public static final int GRID_MOD_DOWN = 3;
+	public static final int GRID_MOD_LEFT = 4;
 	// --- sound
 	public static final int GRID_SOUND_NONE = 0;
 	public static final int GRID_SOUND_1 = 1;
 	public static final int GRID_SOUND_2 = 2;
+	public static final int GRID_SOUND_3 = 3;
+	public static final int GRID_SOUND_4 = 4;
+	public static final int GRID_SOUND_5 = 5;
 	// **---textures
 	public static final int GRID_TEX_GREEN = 0;
 	public static final int GRID_TEX_RED = 1;
@@ -57,7 +65,9 @@ public class GameState {
 	public static final int BUTTON_DOWN = 5;
 	public static final int BUTTON_DELETEALL = 6;
 	public static final int BUTTON_DELETE = 7;
-	// 
+	// button states
+	public static final int BUTTON_UNPRESSED = 0;
+	public static final int BUTTON_PRESSED = 1;
 	
 	// states
 	// -- master
@@ -65,6 +75,12 @@ public class GameState {
 	public static final int STATE_PLAYING = 1;
 	public static final int STATE_REVIEW = 2;
 	public static final int STATE_WIN = 3;
+	public static final int STATE_FINISHED_LEVELS = 4;
+	// intro
+	public static final int STATE_TITLE_SCREEN = 5;
+	public static final int STATE_TUTORIAL_1 = 6;
+	public static final int STATE_TUTORIAL_2 = 7;
+	
 	// portal drop states
 	public static final int INTERACTION_STATE_NONE = 0;
 	public static final int INTERACTION_STATE_PORTAL_IN = 1;
@@ -100,6 +116,12 @@ public class GameState {
 	private Point []portalOut = new Point[MAX_PORTALS];
 	private int []portalOutSpeed = new int[MAX_PORTALS];
 	private int currentPortalOutSpeed = PORTAL_OUT_SPEED_NORMAL;
+	
+	// level
+	private Level curLevel = null;
+	
+	// buttons
+	private int binButtonState = BUTTON_UNPRESSED;
 
 	GameState() {
 		clear();
@@ -125,9 +147,11 @@ public class GameState {
 		// GRID
 		resetGrid();
 		// state
-		currentState = STATE_STOPPED;
+		currentState = STATE_TITLE_SCREEN;
 		// portal
 		interactionState = INTERACTION_STATE_NONE;
+		// buttons
+		binButtonState = BUTTON_UNPRESSED;
 	}
 	
 	public void resetGrid() {
@@ -136,15 +160,18 @@ public class GameState {
 		gridSound = new int [GRID_SIZE_ONE_D];
 		for( int i = 0 ; i < GRID_SIZE_ONE_D ; i++ ) {
 			gridState[i] = GRID_STATE_DEFAULT;
-			gridMod[i] = GRID_ABILITY_NONE;
+			gridMod[i] = GRID_MOD_NONE;
 			gridSound[i] = GRID_SOUND_NONE;
 		}
 		resetPortals();
 	}
 	
 	public void loadLevel(Level level) {
+		Log.d("GameState","load level");
+		curLevel = level;
 		resetGrid();
 		gridSound = Arrays.copyOf(level.getGridSounds(), GRID_SIZE_ONE_D);
+		gridMod = Arrays.copyOf(level.getGridMod(), GRID_SIZE_ONE_D);
 	}
 	
 	// getter / setter for screen
@@ -218,15 +245,9 @@ public class GameState {
 		int idx = ((y*GRID_SIZE_X)+x);
 		if( idx >= 0 && idx < GRID_SIZE_ONE_D ) {
 			if( gridState[idx] == GRID_STATE_ACTIVE ) {
-				return GRID_TEX_GREEN;
+				return gridSound[idx]+100;
 			} else {
-				if( gridSound[idx] == GRID_SOUND_NONE ) {
-					return GRID_TEX_WHITE;
-				} else if( gridSound[idx] == GRID_SOUND_1 ) {
-					return GRID_TEX_DARKBLUE;
-				} else if( gridSound[idx] == GRID_SOUND_2 ) {
-					return GRID_TEX_YELLOW;
-				}
+				return gridSound[idx];
 			}
 		}
 		return 0;
@@ -397,12 +418,25 @@ public class GameState {
 	}
 	
 	
-	/// asdasd
 	public Point[] getParticleGridPos() {
 		return particleGridPos;
 	}
 
 	public void setParticleGridPos(Point[] particleGridPos) {
 		this.particleGridPos = particleGridPos;
+	}
+	
+	
+	public Level getCurLevel() {
+		return curLevel;
+	}
+	
+	// buttons
+	public int getBinButtonState() {
+		return binButtonState;
+	}
+	
+	public void setBinButtonState(int state) {
+		binButtonState = state;
 	}
 }

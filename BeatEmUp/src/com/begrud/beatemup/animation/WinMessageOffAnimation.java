@@ -4,16 +4,12 @@ import com.begrud.beatemup.app.GameState;
 
 public class WinMessageOffAnimation extends TimeDecayObject {
 
-	private float LIFE_TIME = 0.3f;
+	private float LIFE_TIME = 2.f;
 	private GameState gameState;
 	
 	public WinMessageOffAnimation(GameState gameState) {
 		this.gameState = gameState;
-	}
-
-	public WinMessageOffAnimation(float _waitTime) {
-		super(_waitTime);
-		// TODO Auto-generated constructor stub
+		setWaitTime(LIFE_TIME);
 	}
 	
 	@Override
@@ -25,6 +21,7 @@ public class WinMessageOffAnimation extends TimeDecayObject {
         }
 		// finished, do finish thing
 		gameState.setState(GameState.STATE_STOPPED);
+		gameState.getCurLevel().resetActiveSequenceAndSpeed();
         return false; //kill! return true to keep alive
 	}
 
