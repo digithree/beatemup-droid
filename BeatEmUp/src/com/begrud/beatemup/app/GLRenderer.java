@@ -236,12 +236,26 @@ public class GLRenderer implements Renderer
 						sizeFactor*ver);
 				// portal out
 				int speed = gameState.getPortalOutSpeed(i); 
-				portals[1+speed].draw(
+				portals[1].draw(
 						xOffset + (ver*(sizeFactor*((float)portalOut.x+0.5f))),
 						ver - ((ver*(sizeFactor*((float)portalOut.y+0.5f)))),  //"ver -" flips y axis
 						//(ver*0.2f)+
 						sizeFactor*ver,
 						sizeFactor*ver);
+				// portal out speed
+				if( speed == GameState.PORTAL_OUT_SPEED_FAST ) {
+					buttons[3].draw( // fast
+							xOffset + (ver*(sizeFactor*((float)portalOut.x+0.25f))),
+							ver - ((ver*(sizeFactor*((float)portalOut.y+0.25f)))),  //"ver -" flips y axis
+							sizeFactor*ver*0.5f,
+							sizeFactor*ver*0.5f);
+				} else if( speed == GameState.PORTAL_OUT_SPEED_SLOW ) {
+					buttons[5].draw( // fast
+							xOffset + (ver*(sizeFactor*((float)portalOut.x+0.25f))),
+							ver - ((ver*(sizeFactor*((float)portalOut.y+0.25f)))),  //"ver -" flips y axis
+							sizeFactor*ver*0.5f,
+							sizeFactor*ver*0.5f);
+				}
 			}
 		}
 		
