@@ -162,6 +162,12 @@ public class GameLogicThread extends Thread {
 				}
 				return;
 			}
+			if( gameState.getState() == GameState.STATE_FINISHED_LEVELS ) {
+				// reset game
+				init();
+				gameState.setState(GameState.STATE_TITLE_SCREEN);
+				return;
+			}
 			if( state == COORDS_GRID & state != GameState.STATE_WIN
 					& state!= GameState.STATE_FINISHED_LEVELS ) {
 				// touch grid
