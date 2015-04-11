@@ -27,6 +27,8 @@ public class GLView extends GLSurfaceView
 
 		gameState = new GameState();
 		
+		// Added these lines to attempt to fix the black screen problem
+		this.setPreserveEGLContextOnPause(true);
 		/* this "launches" the rendering thread */
 		this.setRenderer(new GLRenderer(context, gameState));
 		

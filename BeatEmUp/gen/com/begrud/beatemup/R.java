@@ -103,9 +103,16 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int tilered=0x7f02004e;
         public static final int tilewhite=0x7f02004f;
         public static final int tileyellow=0x7f020050;
-        public static final int win=0x7f020051;
-        public static final int xdown=0x7f020052;
-        public static final int xup=0x7f020053;
+        public static final int tutorial01of07=0x7f020051;
+        public static final int tutorial02of07=0x7f020052;
+        public static final int tutorial03of07=0x7f020053;
+        public static final int tutorial04of07=0x7f020054;
+        public static final int tutorial05of07=0x7f020055;
+        public static final int tutorial06of07=0x7f020056;
+        public static final int tutorial07of07=0x7f020057;
+        public static final int win=0x7f020058;
+        public static final int xdown=0x7f020059;
+        public static final int xup=0x7f02005a;
     }
     public static final class raw {
         public static final int clap1=0x7f030000;

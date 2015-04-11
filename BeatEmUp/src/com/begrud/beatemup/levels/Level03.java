@@ -7,7 +7,7 @@ public class Level03 extends Level {
 				new int[]{        // sound grid: 0 - no tile, >= 1 - sounds
 					1, 2, 0, 0, 2,
 					0, 0, 0, 0, 0,
-					0, 0, 1, 1, 2,
+					0, 0, 1, 1, 0,  // SIMON EDIT: took out last element in this row to make it less confusing
 					0, 2, 0, 0, 0,
 					2, 1, 0, 1, 0
 				},

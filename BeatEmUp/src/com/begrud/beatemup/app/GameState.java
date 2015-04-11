@@ -80,6 +80,11 @@ public class GameState {
 	public static final int STATE_TITLE_SCREEN = 5;
 	public static final int STATE_TUTORIAL_1 = 6;
 	public static final int STATE_TUTORIAL_2 = 7;
+	public static final int STATE_TUTORIAL_3 = 8;
+	public static final int STATE_TUTORIAL_4 = 9;
+	public static final int STATE_TUTORIAL_5 = 10;
+	public static final int STATE_TUTORIAL_6 = 11;
+	public static final int STATE_TUTORIAL_7 = 12;
 	
 	// portal drop states
 	public static final int INTERACTION_STATE_NONE = 0;

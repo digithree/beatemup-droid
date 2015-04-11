@@ -130,10 +130,11 @@ public class GameLogicThread extends Thread {
 			if( gameState.getState() == GameState.STATE_TITLE_SCREEN ) {
 				gameState.setState(GameState.STATE_TUTORIAL_1);
 				return;
-			} else if( gameState.getState() == GameState.STATE_TUTORIAL_1 ) {
-				gameState.setState(GameState.STATE_TUTORIAL_2);
+			} else if( gameState.getState() >= GameState.STATE_TUTORIAL_1 
+					&& gameState.getState() < GameState.STATE_TUTORIAL_7 ) {
+				gameState.setState(gameState.getState()+1);
 				return;
-			} else if( gameState.getState() == GameState.STATE_TUTORIAL_2 ) {
+			} else if( gameState.getState() == GameState.STATE_TUTORIAL_7 ) {
 				gameState.setState(GameState.STATE_STOPPED);
 				return;
 			}
@@ -141,6 +142,12 @@ public class GameLogicThread extends Thread {
 				Log.d("GameLogicThread","press screen on win, next level");
 				// goto next level
 				curLevelIdx++;
+				// TODO : REMOVE THIS!!! JUST SKIPPING LEVEL 5 BECAUSE IT SEEMS TO BE BROKEN
+				if( curLevelIdx == 4 ) {
+					curLevelIdx++;
+				} else if( curLevelIdx == 7 ) {
+					curLevelIdx++;
+				}
 				if( curLevelIdx < levels.length ) {
 					Log.d("GameLogicThread","new level is "+curLevelIdx);
 					// load level

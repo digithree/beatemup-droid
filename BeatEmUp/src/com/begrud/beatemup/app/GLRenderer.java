@@ -355,14 +355,9 @@ public class GLRenderer implements Renderer
 					ver / 2.f,
 					hor,
 					ver);
-		} else if( gameState.getState() == GameState.STATE_TUTORIAL_1 ) {
-			screens[4].draw(
-					hor / 2.f,
-					ver / 2.f,
-					hor,
-					ver);
-		} else if( gameState.getState() == GameState.STATE_TUTORIAL_2 ) {
-			screens[5].draw(
+		} else if( gameState.getState() >= GameState.STATE_TUTORIAL_1
+				&& gameState.getState() <= GameState.STATE_TUTORIAL_7 ) {
+			screens[4+(gameState.getState()-GameState.STATE_TUTORIAL_1)].draw(
 					hor / 2.f,
 					ver / 2.f,
 					hor,
@@ -427,7 +422,7 @@ public class GLRenderer implements Renderer
 		textures = new Tex[8];
 		buttons = new Tex[16];
 		portals = new Tex[4];
-		screens = new Tex[6];
+		screens = new Tex[11];
 		modifiers = new Tex[4];
 		
 		// fullscreen images -- .25seconds loading total //
@@ -471,8 +466,13 @@ public class GLRenderer implements Renderer
 		screens[1] = new Tex(gl, this.context, R.drawable.screenlevelreview);
 		screens[2] = new Tex(gl, this.context, R.drawable.screencredits);
 		screens[3] = new Tex(gl, this.context, R.drawable.introscreen01);
-		screens[4] = new Tex(gl, this.context, R.drawable.introscreen02);
-		screens[5] = new Tex(gl, this.context, R.drawable.introscreen03);
+		screens[4] = new Tex(gl, this.context, R.drawable.tutorial01of07);
+		screens[5] = new Tex(gl, this.context, R.drawable.tutorial02of07);
+		screens[6] = new Tex(gl, this.context, R.drawable.tutorial03of07);
+		screens[7] = new Tex(gl, this.context, R.drawable.tutorial04of07);
+		screens[8] = new Tex(gl, this.context, R.drawable.tutorial05of07);
+		screens[9] = new Tex(gl, this.context, R.drawable.tutorial06of07);
+		screens[10] = new Tex(gl, this.context, R.drawable.tutorial07of07);
 		
 		modifiers[0] = new Tex(gl, this.context, R.drawable.moddirectionup);
 		modifiers[1] = new Tex(gl, this.context, R.drawable.moddirectionright);
