@@ -20,14 +20,17 @@ By placing portals in the farmer's field you guide a travelling "doodad", hittin
 ### Credits
 
 **Programming**
+
 Simon Kenny https://github.com/digithree
 
 Michael Sherry
 
 **Design**
+
 Eoin Butler Thornton
 
 **Art**
+
 Darren Kearney https://github.com/darrenk
 
 Alan Kinsella
