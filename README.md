@@ -7,7 +7,7 @@ A beetroot music/rythym puzzle game for android, developed in 2 days during the 
 Simply go to the bin folder and download the BeatEmUp.apk file to your Android device, once downloaded you can install it.
 Please note you will need to allow installations from 'Unverified sources', or similar, in order to proceed with the installation.
 
-We promise not to break anything on purpose, but please note this is provided as-is, you install and use at your own risk.
+Disclaimer: We promise not to break anything on purpose, but please note this game is provided as-is (currently version is the Global Game Jam submission), you install and use at your own risk.
 
 
 ### Playing The Game
@@ -21,6 +21,7 @@ By placing portals in the farmer's field you guide a travelling "doodad", hittin
 
 **Programming**
 Simon Kenny https://github.com/digithree
+
 Michael Sherry
 
 **Design**
@@ -28,12 +29,14 @@ Eoin Butler Thornton
 
 **Art**
 Darren Kearney https://github.com/darrenk
+
 Alan Kinsella
 
 
 ####Special Thanks
 
 Pulse College (Galway) http://www.pulsecollege.eu/pulse-college-galway/
+
 Global Game Jam http://globalgamejam.org/
 
 
